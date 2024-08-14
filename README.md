@@ -1,4 +1,5 @@
-#Color Theme Maker
+Color Theme Maker
+
 Kunkel321: (version date in code)
 
 https://github.com/kunkel321/ColorThemeMaker
