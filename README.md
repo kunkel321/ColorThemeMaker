@@ -1,10 +1,13 @@
-Color Theme Maker
+# Color Theme Maker
 
 Kunkel321: (version date in code)
 
 https://github.com/kunkel321/ColorThemeMaker
 
 https://www.autohotkey.com/boards/viewtopic.php?f=83&t=132310
+
+![Screenshot of main window](https://i.imgur.com/BJaONaj.png))
+
 
 WhiteColorBlackGradient function is based on ColorGradient() by Lateralus138 and Teadrinker.  
 I Used Claude.ai for debugging several parts and doing the "split complemplementary" math. 
