@@ -4,6 +4,7 @@
 /*
 Color Theme Maker
 Kunkel321: 8-14-2024
+https://github.com/kunkel321/ColorThemeMaker
 https://www.autohotkey.com/boards/viewtopic.php?f=83&t=132310
 
 WhiteColorBlackGradient function is based on ColorGradient() by Lateralus138 and Teadrinker.  
@@ -63,35 +64,28 @@ myGui.BackColor := formColor
 pattern := myGui.Add("Text", "x14 W215 Center","Split Complementary`n" guiTitle)
 pattern.SetFont("bold")
 
-myGui.SetFont("s11")
-myGui.Add("Text","x14 w215 Center","Change Hue")
-myGui.SetFont("s12")
-
 myRadRGB := myGui.Add("Radio", "x50  Checked1", "RGB")
 myRadRGB.OnEvent("Click", colorChanged)
 myRadCYM := myGui.Add("Radio", "x+30", "CYM")
 myRadCYM.OnEvent("Click", colorChanged)
 
-global color1 := myGui.Add("ComboBox", "x14 w215 Background" listColor, colorArray) 
+myGui.Add("Text","x14 ","Reference:")
+global color1 := myGui.Add("ComboBox", "x+5 w110 Background" listColor, colorArray) 
 color1.OnEvent("Change", colorChanged)
 
 global myReference := myGui.Add("ComboBox", "x14 w90 choose1 Background" listColor, ['fontColor','listColor','formColor'])
 myReference.OnEvent("Change", colorChanged)
-myGui.Add("Text","x+5 ","Is Reference")
+myGui.Add("Text","x+5 ","uses reference")
 
 
-sEdit := myGui.Add("Edit", "w50 x14")
-sSteps := myGui.Add("UpDown", "Range-60-60", splitSteps) 
-myGui.Add("Text", "x+5", "Split Size")
+myGui.Add("Text", "x14", "Split steps for other 2: ")
+sEdit := myGui.Add("Edit", "w50 x+5")
+sSteps := myGui.Add("UpDown", " Range-60-60", splitSteps) 
 sSteps.OnEvent("change", colorChanged)
 sSteps.Enabled := False
 sEdit.Enabled := False
 myListArr := ["fontColor:`t" fontColor, "listColor:`t" listColor, "formColor:`t" formColor,]
 myList := myGui.Add("ListBox", "x14 w215 r3 Background" listColor, myListArr)
-
-myGui.SetFont("s11")
-myGui.Add("Text","x14 w215 Center","Change Shading")
-
 
 myRadLight := myGui.Add("Radio", "x50 Checked1", "Light")
 myRadLight.OnEvent("Click", shadeChanged)
@@ -106,13 +100,13 @@ myGui.Add("Text","x+4","Saturation").OnEvent("DoubleClick", resaturate)
 myGui.SetFont("s12")
 
 FontShadeEdit := myGui.Add("Edit", "y+5 w50 x14") ; FontColor Shading.
-FontShadeSteps := myGui.Add("UpDown", "Range2-" shadingSteps, "24") ; last parameter is the default setting. Change as desired.
+FontShadeSteps := myGui.Add("UpDown", "Range1-" shadingSteps, "24") ; last parameter is the default setting. Change as desired.
 FontShadeSteps.OnEvent("change", colorChanged)
 FontShadeSteps.Enabled := False
 FontShadeEdit.Enabled := False
 
 FontSaturationEdit := myGui.Add("Edit", "w50 x+5") ; FontColor Saturation.
-FontSaturationSteps := myGui.Add("UpDown", "Range2-" saturationSteps, saturationSteps) ; last parameter is the default setting. Change as desired.
+FontSaturationSteps := myGui.Add("UpDown", "Range1-" saturationSteps, saturationSteps) ; last parameter is the default setting. Change as desired.
 myGui.Add("Text", "x+5", "Font")
 FontSaturationSteps.OnEvent("change", colorChanged)
 FontSaturationSteps.Enabled := False
@@ -120,13 +114,13 @@ FontSaturationEdit.Enabled := False
 ;-----------------------
 
 ListShadeEdit := myGui.Add("Edit", "w50 x14") ; ListColor (Ctrl Background) Shading.
-ListShadeSteps := myGui.Add("UpDown", "Range2-" shadingSteps, "4") 
+ListShadeSteps := myGui.Add("UpDown", "Range1-" shadingSteps, "4") 
 ListShadeSteps.OnEvent("change", colorChanged)
 ListShadeSteps.Enabled := False
 ListShadeEdit.Enabled := False
 
 ListSaturationEdit := myGui.Add("Edit", "w50 x+5") ; ListColor (Ctrl Background) Saturation.
-ListSaturationSteps := myGui.Add("UpDown", "Range2-" saturationSteps, saturationSteps) 
+ListSaturationSteps := myGui.Add("UpDown", "Range1-" saturationSteps, saturationSteps) 
 myGui.Add("Text", "x+5", "List (Ctrl Bkg)")
 ListSaturationSteps.OnEvent("change", colorChanged)
 ListSaturationSteps.Enabled := False
@@ -134,13 +128,13 @@ ListSaturationEdit.Enabled := False
 ;-----------------------
 
 FormShadeEdit := myGui.Add("Edit", " w50 x14") ; Form (Gui BackColor) Shading. 
-FormShadeSteps := myGui.Add("UpDown", "Range2-" shadingSteps, "9")
+FormShadeSteps := myGui.Add("UpDown", "Range1-" shadingSteps, "9")
 FormShadeSteps.OnEvent("change", colorChanged)
 FormShadeSteps.Enabled := False
 FormShadeEdit.Enabled := False
 
 FormSaturationEdit := myGui.Add("Edit", " w50 x+5") ; Form (Gui BackColor) Saturation. 
-FormSaturationSteps := myGui.Add("UpDown", "Range2-" saturationSteps, saturationSteps)
+FormSaturationSteps := myGui.Add("UpDown", "Range1-" saturationSteps, saturationSteps)
 myGui.Add("Text", "x+5", "Form (Gui Bck)")
 FormSaturationSteps.OnEvent("change", colorChanged)
 FormSaturationSteps.Enabled := False
@@ -148,12 +142,20 @@ FormSaturationEdit.Enabled := False
 ;-----------------------
 
 ; the buttons
-expButton := myGui.Add("Button" , "w215 x14", "Export Vars to ClipBrd")
+myGui.SetFont("s11")
+expButton := myGui.Add("Button" , "w100 x14", "Export Vars`nto ClipBoard")
 expButton.OnEvent("Click", exportClip)
 expButton.Enabled := False
-samButton := myGui.Add("Button" , "w215 x14", "Export Sample File")
+samButton := myGui.Add("Button" , "w100 x+5", "Export`nSample File")
 samButton.OnEvent("Click", exportFile)
 samButton.Enabled := False
+
+relButton := myGui.Add("Button" , "w100 x14", "Reload Script")
+relButton.OnEvent("Click", buttRestart)
+relButton.Enabled := False
+canButton := myGui.Add("Button" , "w100 x+5", "Cancel")
+canButton.OnEvent("Click", buttCancel)
+canButton.Enabled := False
 
 ; Main hotkey shows/hides gui.
 Hotkey(myHotKey, showHideTool) 
@@ -163,6 +165,21 @@ showHideTool(*) {
     Else 
         myGui.Show("x" A_ScreenWidth /5*3) 
 }
+
+; 'Reload Script button pressed'
+buttRestart(*) {
+    Result := MsgBox("Current colors will be lost if you restart.",, "icon! okCancel")
+    If Result = "OK"
+        Reload()
+    Else If Result = "Cancel"
+        Return
+}
+
+; 'Cancel' button pressed.
+buttCancel(*) {
+    myGui.Hide()
+}
+
 
 ; If user changes light/dark radio, set 3 shade spinners.
 shadeChanged(*) { 
@@ -215,7 +232,7 @@ colorChanged(*) {
         return  ; Exit the function early if the combobox is empty
     }
     Else {
-        for ctrl in [myRadLight, myRadDark, sEdit, sSteps, ListShadeEdit, ListShadeSteps, FormShadeEdit, FormShadeSteps, FontShadeEdit, FontShadeSteps, ListSaturationEdit, ListSaturationSteps, FormSaturationEdit, FormSaturationSteps, FontSaturationEdit, FontSaturationSteps, expButton, samButton]
+        for ctrl in [myRadLight, myRadDark, sEdit, sSteps, ListShadeEdit, ListShadeSteps, FormShadeEdit, FormShadeSteps, FontShadeEdit, FontShadeSteps, ListSaturationEdit, ListSaturationSteps, FormSaturationEdit, FormSaturationSteps, FontSaturationEdit, FontSaturationSteps, expButton, samButton, relButton, canButton]
             ctrl.Enabled := True
     }
 
@@ -227,18 +244,18 @@ colorChanged(*) {
     ClockWise := colorArray[splitCompClockwiseIdx]
 
     Switch splitSteps { ; Update Title.
-        Case 0: 
-            pattern.text := "Complementary`n" guiTitle
+        Case 0:pattern.text := "Complementary`n" guiTitle
         Case 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15:
             pattern.text := "Split Complementary`n" guiTitle
-        Case 20: 
-            pattern.text := "Triad`n" guiTitle
+        Case -1, -2, -3, -4, -5, -6, -7, -8, -9, -10, -11, -12, -13, -14, -15:
+            pattern.text := "Split Complementary`n" guiTitle
+        Case 20, -20: pattern.text := "Triad`n" guiTitle
         Case 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59: 
             pattern.text := "Analogous`n" guiTitle
-        Case 60: 
-            pattern.text := "Monochromatic`n" guiTitle
-        Default:
-            pattern.text := guiTitle
+        Case -45, -46, -47, -48, -49, -50, -51, -52, -53, -54, -55, -56, -57, -58, -59: 
+            pattern.text := "Analogous`n" guiTitle
+        Case 60, -60: pattern.text := "Monochromatic`n" guiTitle
+        Default: pattern.text := guiTitle
     }
     
     ; This part is for the "font/from/list Is Reference" color part.
