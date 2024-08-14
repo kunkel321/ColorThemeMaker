@@ -232,7 +232,7 @@ colorChanged(*) {
         return  ; Exit the function early if the combobox is empty
     }
     Else {
-        for ctrl in [myRadLight, myRadDark, sEdit, sSteps, ListShadeEdit, ListShadeSteps, FormShadeEdit, FormShadeSteps, FontShadeEdit, FontShadeSteps, ListSaturationEdit, ListSaturationSteps, FormSaturationEdit, FormSaturationSteps, FontSaturationEdit, FontSaturationSteps, expButton, samButton, relButton, canButton]
+        for ctrl in myGui
             ctrl.Enabled := True
     }
 
