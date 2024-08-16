@@ -43,9 +43,9 @@ Near the bottom is the 3-row ListBox.  This shows the hexadecimal color values t
 Note also:  The 'Export Sample File' button will make a sample gui in an ahk file and attempt to run it.  Depending on your setup, it might open for editing, or might not open at all.  It is more likely to work if this (Color Theme Maker) script is running as Admin.  The sample file will get saved in the same folder as this file. 
 */
 
-myHotKey := "!+g"  ; Alt+Shift+G shows/hides tool.
-^Esc::ExitApp ; Ctrl+Esc Terminates entire script.
-guiTitle := "Color Theme Maker" ; OK to change title (here only).
+myHotKey := "!+g"                   ; Alt+Shift+G shows/hides tool.
+^Esc::ExitApp                       ; Ctrl+Esc Terminates entire script.
+guiTitle := "Color Theme Maker"     ; OK to change title (here only).
 
 TraySetIcon("shell32.dll",131)      ; Change tray icon, if desired. 
 
@@ -205,26 +205,24 @@ unshade(*){
     colorChanged()
 }
 
-
+; This function is only called when the user double-clicks a listBox item. 
 listClick(*) {
-    
-    static customColors := []
-    currentColor := 0
-    static currentColor := SubStr(myList.text, -8)
+    global fontColor, listColor, formColor
+    static customColors := [] ; Holds the "Custom Colors" added to the Windows color picker.
+    currentColor := SubStr(myList.text, -8) ; Use only hex code at right of list item. 
 
-    ; Convert the current color to a number if it's a string
-    initColor := Type(currentColor) == "String" ? Integer("0x" . SubStr(currentColor, 3)) : currentColor
+    newColor := ChooseColor(currentColor,, customColors) ; Calls the below function.
+    If (newColor = "") ; If user presses cancel, a blank str is returned, so use previous color.
+        newColor := currentColor
 
-    newColor := ChooseColor(initColor,, customColors)
-    If SubStr(myList.Text, 1, 4) = "font"
+    If SubStr(myList.Text, 1, 4) = "font"  ; Read left 4 letters of list choice. 
         fontColor := newColor
     Else If SubStr(myList.Text, 1, 4) = "list"
         listColor := newColor
-    Else ; 'form'
+    Else                          ; = "form"
         formColor := newColor
 
-    global fontColor, listColor, formColor
-    myGui.BackColor := formColor   
+    myGui.BackColor := formColor   ; Reset all the colors of the gui parts.
     For Ctrl in myGui {
     If (Ctrl.Type = "Edit") or (Ctrl.Type = "ListBox") or (Ctrl.Type = "ComboBox")
         Ctrl.Opt("Background" listColor)
