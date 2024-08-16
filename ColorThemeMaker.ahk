@@ -3,11 +3,12 @@
 
 /*
 Color Theme Maker
-Kunkel321: 8-14-2024
+Kunkel321: 8-16-2024
 https://github.com/kunkel321/ColorThemeMaker
 https://www.autohotkey.com/boards/viewtopic.php?f=83&t=132310
 
-WhiteColorBlackGradient function is based on ColorGradient() by Lateralus138 and Teadrinker.  
+WhiteColorBlackGradient function is based on ColorGradient() by Lateralus138 and Teadrinker. 
+Calling the Windows color picker is also based on Teadrinker code.  
 I Used Claude.ai for debugging several parts and doing the "split complemplementary" math. 
 Some aspects are also from https://colordesigner.io/color-wheel
 
@@ -35,33 +36,35 @@ So… If the Split Size is 10 or 15 or so, then the pattern will be “Split Com
 
 With a gui, the font needs to “stand out” from the background color of the gui and the controls, so the  colors chosen will often need to be adjusted in terms of lightness/darkness.  Typically the font will be on one end of the light/dark continuum, and the background colors will be at the other end.  The Light/Dark radios swap this.  The bottom three up/down boxes are for fine-tuning the light/darkness. 
 
-Similar to changing the shading, users may wish to "tone-down" one or more of the colors by reducing the saturation.  This is simulated by fading the color to gray.  The saturation up/down controls are next to the shading ones. Double-clicking the "Saturation" text label will reset the saturation levels to max. 
+Similar to changing the shading, users may wish to "tone-down" one or more of the colors by reducing the saturation.  This is simulated by fading the color to gray.  The saturation up/down controls are next to the shading ones. Double-clicking the "ReSaturate" text label will reset the saturation levels to max.  And double-clicking the "UnShade" text label will set the shade spinners to the middle number (neither light, nor dark.)
 
-Note also:  The 'Export Sample File' button will make a sample gui in an ahk file and attempt to run it.  Depending on your setup, it might open for editing, or might not open at all.  It will get saved in the same folder as this file. 
+Near the bottom is the 3-row ListBox.  This shows the hexadecimal color values that will get exported.   The ListBox is also an "override."  If you can't get a color you like with the Hue, Shade, and Saturation controls, double-click the row in the list to pick a totally different color.  This will call a Windows color picker (based strongly on Teadrinker code) and disregard the above control.  Note that if you then change a Hue, Shade, pr Saturation control, those controls will, again, take presidence and determine the colors used. 
+
+Note also:  The 'Export Sample File' button will make a sample gui in an ahk file and attempt to run it.  Depending on your setup, it might open for editing, or might not open at all.  It is more likely to work if this (Color Theme Maker) script is running as Admin.  The sample file will get saved in the same folder as this file. 
 */
 
 myHotKey := "!+g"  ; Alt+Shift+G shows/hides tool.
 ^Esc::ExitApp ; Ctrl+Esc Terminates entire script.
 guiTitle := "Color Theme Maker" ; OK to change title (here only).
 
-TraySetIcon("shell32.dll",131) 
-formColor := "Default"
-listColor := "Default"
-fontColor := "Default"
-reference := ""
-CounterClock := ""
-ClockWise := ""
-shadingSteps := 30
-saturationSteps := 30
-splitSteps := 10  
+TraySetIcon("shell32.dll",131)      ; Change tray icon, if desired. 
+
+fontColor := "0x2A2A2A"           ; Change start color, if desired.
+listColor := "0xF7F7F7"           ; Change start color, if desired.
+formColor := "0xD2D2D2"           ; Change start color, if desired.
+
+shadingSteps        := 30           ; Change number of steps, if desired.
+saturationSteps     := 30           ; Change number of steps, if desired.
+splitSteps          := 55           ; Change start number, if desired.
+
 setColorArrays() ; The arrays are large, so I put them at the bottom.  
-colorArray := additiveRGB
+colorArray  := additiveRGB          ; Change to subtractiveCMY if desired.
 
 ; --- Build gui ---
-global myGui := Gui(, guiTitle)
+global myGui := Gui("+AlwaysOnTop", guiTitle)
 myGui.SetFont("s12 c" fontColor)
 myGui.BackColor := formColor
-pattern := myGui.Add("Text", "x14 W215 Center","Split Complementary`n" guiTitle)
+pattern := myGui.Add("Text", "x14 W215 Center","`n" guiTitle)
 pattern.SetFont("bold")
 
 myRadRGB := myGui.Add("Radio", "x50  Checked1", "RGB")
@@ -84,8 +87,6 @@ sSteps := myGui.Add("UpDown", " Range-60-60", splitSteps)
 sSteps.OnEvent("change", colorChanged)
 sSteps.Enabled := False
 sEdit.Enabled := False
-myListArr := ["fontColor:`t" fontColor, "listColor:`t" listColor, "formColor:`t" formColor,]
-myList := myGui.Add("ListBox", "x14 w215 r3 Background" listColor, myListArr)
 
 myRadLight := myGui.Add("Radio", "x50 Checked1", "Light")
 myRadLight.OnEvent("Click", shadeChanged)
@@ -95,12 +96,12 @@ myRadLight.Enabled := False
 myRadDark.Enabled := False
 
 myGui.SetFont("s10")
-myGui.Add("Text","x14","Shading ")
-myGui.Add("Text","x+4","Saturation").OnEvent("DoubleClick", resaturate)
+myGui.Add("Text","x12","UnShade").OnEvent("DoubleClick", unshade)
+myGui.Add("Text","x+3","ReSaturate").OnEvent("DoubleClick", resaturate)
 myGui.SetFont("s12")
 
 FontShadeEdit := myGui.Add("Edit", "y+5 w50 x14") ; FontColor Shading.
-FontShadeSteps := myGui.Add("UpDown", "Range1-" shadingSteps, "24") ; last parameter is the default setting. Change as desired.
+FontShadeSteps := myGui.Add("UpDown", "Range1-" shadingSteps, ShadingSteps * 5/6) ; last parameter is the default setting. Change as desired.
 FontShadeSteps.OnEvent("change", colorChanged)
 FontShadeSteps.Enabled := False
 FontShadeEdit.Enabled := False
@@ -114,7 +115,7 @@ FontSaturationEdit.Enabled := False
 ;-----------------------
 
 ListShadeEdit := myGui.Add("Edit", "w50 x14") ; ListColor (Ctrl Background) Shading.
-ListShadeSteps := myGui.Add("UpDown", "Range1-" shadingSteps, "4") 
+ListShadeSteps := myGui.Add("UpDown", "Range1-" shadingSteps, ShadingSteps * 1/5) 
 ListShadeSteps.OnEvent("change", colorChanged)
 ListShadeSteps.Enabled := False
 ListShadeEdit.Enabled := False
@@ -128,7 +129,7 @@ ListSaturationEdit.Enabled := False
 ;-----------------------
 
 FormShadeEdit := myGui.Add("Edit", " w50 x14") ; Form (Gui BackColor) Shading. 
-FormShadeSteps := myGui.Add("UpDown", "Range1-" shadingSteps, "9")
+FormShadeSteps := myGui.Add("UpDown", "Range1-" shadingSteps, (ShadingSteps * 1/5)+1)
 FormShadeSteps.OnEvent("change", colorChanged)
 FormShadeSteps.Enabled := False
 FormShadeEdit.Enabled := False
@@ -141,21 +142,27 @@ FormSaturationSteps.Enabled := False
 FormSaturationEdit.Enabled := False
 ;-----------------------
 
+myListArr := ["fontColor:`t" fontColor, "listColor:`t" listColor, "formColor:`t" formColor,]
+myList := myGui.Add("ListBox", "x14 w215 r3 Background" listColor, myListArr)
+myList.OnEvent("DoubleClick", listClick)
+
 ; the buttons
 myGui.SetFont("s11")
 expButton := myGui.Add("Button" , "w100 x14", "Export Vars`nto ClipBoard")
 expButton.OnEvent("Click", exportClip)
 expButton.Enabled := False
-samButton := myGui.Add("Button" , "w100 x+5", "Export`nSample File")
+samButton := myGui.Add("Button" , "w100 x+15", "Export`nSample File")
 samButton.OnEvent("Click", exportFile)
 samButton.Enabled := False
 
 relButton := myGui.Add("Button" , "w100 x14", "Reload Script")
 relButton.OnEvent("Click", buttRestart)
 relButton.Enabled := False
-canButton := myGui.Add("Button" , "w100 x+5", "Cancel")
+canButton := myGui.Add("Button" , "w100 x+15", "Cancel")
 canButton.OnEvent("Click", buttCancel)
 canButton.Enabled := False
+
+myGui.OnEvent("Escape", (*) => myGui.Hide()) ; If user presses escape while gui is active...
 
 ; Main hotkey shows/hides gui.
 Hotkey(myHotKey, showHideTool) 
@@ -163,36 +170,22 @@ showHideTool(*) {
     If WinActive(guiTitle)
         myGui.Hide()
     Else 
-        myGui.Show("x" A_ScreenWidth /5*3) 
-}
-
-; 'Reload Script button pressed'
-buttRestart(*) {
-    Result := MsgBox("Current colors will be lost if you restart.",, "icon! okCancel")
-    If Result = "OK"
-        Reload()
-    Else If Result = "Cancel"
-        Return
-}
-
-; 'Cancel' button pressed.
-buttCancel(*) {
-    myGui.Hide()
+        myGui.Show("x" A_ScreenWidth /5*3) ; Show off center.
 }
 
 
 ; If user changes light/dark radio, set 3 shade spinners.
 shadeChanged(*) { 
     If (myRadLight.Value = 1) {
-        FormShadeSteps.Value := 6
-        ListShadeSteps.Value := 8
-        FontShadeSteps.Value := 24
+        FormShadeSteps.Value := (ShadingSteps * 1/5)+1
+        ListShadeSteps.Value := ShadingSteps * 1/5
+        FontShadeSteps.Value := ShadingSteps * 5/6
         colorChanged()
     }
     Else {
-        FormShadeSteps.Value := 25
-        ListShadeSteps.Value := 23
-        FontShadeSteps.Value := 7
+        FormShadeSteps.Value := (ShadingSteps * 4/5)+1
+        ListShadeSteps.Value := ShadingSteps * 4/5
+        FontShadeSteps.Value := ShadingSteps * 1/6
         colorChanged()
     }
 }
@@ -205,19 +198,59 @@ resaturate(*) {
     colorChanged()
 }
 
+unshade(*){
+    FormShadeSteps.Value := ShadingSteps //2 
+    ListShadeSteps.Value := ShadingSteps //2
+    FontShadeSteps.Value := ShadingSteps //2
+    colorChanged()
+}
+
+
+listClick(*) {
+    
+    static customColors := []
+    currentColor := 0
+    static currentColor := SubStr(myList.text, -8)
+
+    ; Convert the current color to a number if it's a string
+    initColor := Type(currentColor) == "String" ? Integer("0x" . SubStr(currentColor, 3)) : currentColor
+
+    newColor := ChooseColor(initColor,, customColors)
+    If SubStr(myList.Text, 1, 4) = "font"
+        fontColor := newColor
+    Else If SubStr(myList.Text, 1, 4) = "list"
+        listColor := newColor
+    Else ; 'form'
+        formColor := newColor
+
+    global fontColor, listColor, formColor
+    myGui.BackColor := formColor   
+    For Ctrl in myGui {
+    If (Ctrl.Type = "Edit") or (Ctrl.Type = "ListBox") or (Ctrl.Type = "ComboBox")
+        Ctrl.Opt("Background" listColor)
+    If (Ctrl.Type = "Text") or (Ctrl.Type = "Edit") or (Ctrl.Type = "ListBox") or (Ctrl.Type = "ComboBox")
+        Ctrl.Opt("c" fontColor) ; doesn't work for radios :- (
+    }
+    
+    ; Update color values displayed in ListBox. 
+    myListArr := ["fontColor:`t" fontColor, "listColor:`t" listColor, "formColor:`t" formColor,]
+    myList.Delete() ; Clear all existing items
+    myList.Add(myListArr) ; Add new items
+}
+
 ; This is the main function that updates the colors in the gui and does several calculations. 
 colorChanged(*) {    
     splitSteps := sSteps.Value
 
     If myRadRGB.Value = 1 {
-        colorArray := subtractiveCMY
+        colorArray := additiveRGB   
         refIndex := color1.Value
         color1.Delete() ; Clear all existing items
         color1.Add(colorArray) ; Add new items
         color1.Value := refIndex
     }
     else {
-        colorArray := additiveRGB   
+        colorArray := subtractiveCMY
         refIndex := color1.Value
         color1.Delete() ; Clear all existing items
         color1.Add(colorArray) ; Add new items
@@ -232,7 +265,7 @@ colorChanged(*) {
         return  ; Exit the function early if the combobox is empty
     }
     Else {
-        for ctrl in myGui
+        for ctrl in [myRadLight, myRadDark, sEdit, sSteps, ListShadeEdit, ListShadeSteps, FormShadeEdit, FormShadeSteps, FontShadeEdit, FontShadeSteps, ListSaturationEdit, ListSaturationSteps, FormSaturationEdit, FormSaturationSteps, FontSaturationEdit, FontSaturationSteps, expButton, samButton, relButton, canButton]
             ctrl.Enabled := True
     }
 
@@ -385,6 +418,41 @@ ColorToGrayGradient(color, steps) {
     return colorArr
 }
 
+; CooseColor is based on Teadrinker code here: https://www.autohotkey.com/boards/viewtopic.php?f=83&t=131364#p578641
+; Used Claude.ai to update it for returning the value as an 8-char 0x****** value. 
+ChooseColor(initColor := 0, hWnd := 0, customColorsArr := '', flags := 3) { ; flags: CC_RGBINIT = 1, CC_FULLOPEN = 2, CC_PREVENTFULLOPEN = 4
+    static init := false, customColors := '', CHOOSECOLOR := ''
+         , RGB_BGR := color => (color & 0xFF) << 16 | color & 0xFF00 | color >> 16
+    if !init {
+        init := true
+        if !IsObject(customColorsArr) {
+            customColorsArr := []
+        }
+        customColorsArr.Length := 16
+        customColors := Buffer(64)
+        Loop 16 {
+            clr := customColorsArr.Has(A_Index) && IsInteger(customColorsArr[A_Index])
+                ? RGB_BGR(customColorsArr[A_Index] & 0xFFFFFF) : 0xFFFFFF
+            NumPut('UInt', clr, customColors, (A_Index - 1) * 4)
+        }
+        CHOOSECOLOR := Buffer(A_PtrSize * 9)
+        NumPut('Ptr', customColors.ptr, NumPut('Ptr', CHOOSECOLOR.size, CHOOSECOLOR) + A_PtrSize * 3)
+    }
+    NumPut('Ptr', hWnd, CHOOSECOLOR, A_PtrSize)
+    NumPut('UInt', RGB_BGR(initColor), CHOOSECOLOR, A_PtrSize * 3)
+    NumPut('UInt', flags, CHOOSECOLOR, A_PtrSize * 5)
+    res := DllCall('Comdlg32\ChooseColor', 'Ptr', CHOOSECOLOR)
+    Loop 16 {
+        customColorsArr[A_Index] := RGB_BGR(NumGet(customColors, (A_Index - 1) * 4, 'UInt'))
+    }
+    if (res) {
+        color := NumGet(CHOOSECOLOR, A_PtrSize * 3, 'UInt')
+        return Format("0x{:06X}", RGB_BGR(color))  ; Convert BGR to RGB
+    } else {
+        return ""
+    }
+}
+
 ; Send simple list of vars to Windows Clipboard. 
 exportClip(*)
 {   Global fontColor, listColor, formColor
@@ -424,12 +492,29 @@ myGui.Show()
     )"
     FileName := "colorThemeSample-" A_Now ".ahk"
     FileAppend(myExp, FileName)
-    While Not FileExist {
-        FileName
+    While Not FileExist(FileName) { 
         Sleep 100
     }
     Run FileName
 }
+
+; 'Reload Script' button pressed
+buttRestart(*) {
+    Result := MsgBox("Current colors will be lost if you restart.",, "icon! okCancel")
+    If Result = "OK"
+        Reload()
+    Else If Result = "Cancel"
+        Return
+}
+
+; 'Cancel' button pressed.
+buttCancel(*) {
+    myGui.Hide()
+}
+
+
+
+
 
 ; The color arrays for the main reference color. 
 setColorArrays() {
