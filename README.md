@@ -1,4 +1,5 @@
 # Color Theme Maker
+11-5-2024 Notes:  Color Theme Maker evolved into the Color Theme Integrator, then it got absorbed into the AutoCorrect2 project, where the newest versions are:  https://github.com/kunkel321/AutoCorrect2
 
 Kunkel321: (version date in code)
 
